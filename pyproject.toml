@@ -10,6 +10,7 @@ Flask = "^2.0.2"
 pony = "^0.7.14"
 psycopg2-binary = "^2.9.2"
 gunicorn = "^20.1.0"
+httpx = "^0.21.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"

@@ -1,0 +1,18 @@
+version: '3'
+services:
+
+  web:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=development
+
+
+  db:
+    image: cockroachdb/cockroach:v21.2.2
+    volumes:
+      - cockroach-data:/cockroach/cockroach-data
+
+volumes:
+  cockroach-data:
