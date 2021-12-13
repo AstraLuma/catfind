@@ -226,11 +226,11 @@ def guess_url(url):
 
 
 def check_for_inventory(url):
-    resp = httpx.get(url, follow_redirects=True)
-    if not resp.is_success:
-        return False
-    chunk = next(resp.iter_bytes())
-    return chunk.startswith(b'# Sphinx')
+    with httpx.stream('GET', url, follow_redirects=True) as resp:
+        if not resp.is_success:
+            return False
+        chunk = next(resp.iter_bytes())
+        return chunk.startswith(b'# Sphinx')
 
 
 # From https://stackoverflow.com/questions/6038061/regular-expression-to-find-urls-within-a-string
