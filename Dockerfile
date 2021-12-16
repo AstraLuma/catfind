@@ -29,10 +29,4 @@ RUN pip install --disable-pip-version-check /tmp/*.whl && \
 
 ENV FLASK_APP=catfind
 
-# Options we can set for Gunicorn
-# ENV GUNICORN_WORKERS=1
-# ENV GUNICORN_THREADS=1
-# ENV GUNICORN_BIND=0.0.0.0:8080
-# ENV GUNICORN_LOG_LEVEL=debug
-
-CMD ["gunicorn", "catfind:app"]
+CMD ["gunicorn", "-b", "0.0.0.0:8000", "catfind:app"]
