@@ -152,16 +152,14 @@ LIST_TYPES = {
 
 @app.before_first_request
 def load_initial_indexes():
-    # For the benefit of calling the CLI
-    os.environ.setdefault('FLASK_APP', __name__)
-
     for url in app.config['INITIAL_INVENTORIES']:
         with orm.db_session():
             proj = Project.get(inv_url=url)
 
-        if proj is None:
-            logger.info("Adding initial inventory %r", url)
-            index([url])
+            if proj is None:
+                logger.info("Adding initial inventory %r", url)
+                Project(inv_url=url)
+            # Let the scheduled task load the initial data
 
 
 @app.cli.command('index')
