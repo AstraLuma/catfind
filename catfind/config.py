@@ -6,9 +6,10 @@ from urllib.parse import urlparse
 
 if 'DATABASE_URL' in os.environ:
     bits = urlparse(os.environ['DATABASE_URL'])
+
     PONY = {
         'provider': bits.scheme,
-        'user': bits.user,
+        'user': bits.username,
         'password': bits.password,
         'host': bits.host,
         'database': bits.path.lstrip('/'),
