@@ -2,6 +2,6 @@
 <title>catfind: sphinx indexer</title>
 <ul>
     {% for item in entries %}
-    <li><a href="{{ item.url }}" title="{{item.kind}}:{{item.name}}">{{item.project.name}}: {{item}}</a></li>
+    <li><a href="{{ item.url }}" title="{{item.kind}}:{{item.name}}">{{item.project.name}} {{item.project.version}}: {{item}}</a></li>
     {% endfor %}
 </ul>
