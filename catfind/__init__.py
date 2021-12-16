@@ -214,8 +214,15 @@ def auto_index():
     with orm.db_session():
         now = datetime.now(timezone.utc)
         index_before = now - timedelta(days=1)
+
+        def time_since(val):
+            if val is None:
+                return 1e6  # idk, a lot i guess
+            else:
+                return (now - val.replace(tzinfo=timezone.utc)).total_seconds()
+
         projs = select(p for p in Project if not p.last_indexed or p.last_indexed <= index_before)[:]
-        weights = [(now - p.last_indexed.replace(tzinfo=timezone.utc)).total_seconds() for p in projs]
+        weights = [time_since(p.last_indexed) for p in projs]
 
         if not projs:
             # No projects
