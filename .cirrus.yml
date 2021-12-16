@@ -18,6 +18,7 @@ lint_task:
     image: python:3.9
   install_script:
     - pip install poetry
+    - poetry --version
     - poetry install
   test_script:
-    - flake8
+    - poetry run flake8
