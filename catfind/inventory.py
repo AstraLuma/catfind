@@ -18,6 +18,8 @@ import zlib
 
 import httpx
 
+from . import http
+
 __all__ = 'Inventory',
 
 BUFSIZE = 16 * 1024
@@ -112,12 +114,13 @@ class Inventory(list):
             Inventory: Instance containing loaded data
         """
         # TODO: Stream directly instead of buffering the whole thing
-        resp = httpx.get(uri, follow_redirects=True)
-        resp.raise_for_status()
-        buf = io.BytesIO(resp.content)
-        self = cls.load(
-            buf, uri, lambda base, tail: str(httpx.URL(base).join(tail)),
-        )
+        with http.client() as client:
+            resp = client.get(uri, follow_redirects=True)
+            resp.raise_for_status()
+            buf = io.BytesIO(resp.content)
+            self = cls.load(
+                buf, uri, lambda base, tail: str(httpx.URL(base).join(tail)),
+            )
         # TODO: check the history for a Permanent Redirect and record that here
         self.uri = uri
         return self

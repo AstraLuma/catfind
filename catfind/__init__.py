@@ -4,6 +4,7 @@ import json
 import logging
 import os
 import random
+from re import U
 
 import click
 from flask import Flask, redirect, make_response, request, render_template_string
@@ -11,6 +12,7 @@ from pony.flask import Pony
 from pony import orm
 from pony.orm import select
 
+from .discovery import Guesser
 from .inventory import Inventory
 
 logger = logging.getLogger(__name__)
@@ -205,7 +207,8 @@ def index(url):
 
 
 @app.cli.command('auto-index')
-def auto_index():
+@click.option('-n', '--number', type=int, default=1, help="Number of projects to process")
+def auto_index(number):
     """
     Automatically select & index one project.
 
@@ -228,7 +231,45 @@ def auto_index():
             # No projects
             return
 
-        proj, = random.choices(projs, weights=weights)
+        projs = random.choices(projs, weights=weights, k=number)
 
-    print(f"Updating {proj.name} ({proj.inv_url})")
-    index([proj.inv_url])
+    for proj in projs:
+        print(f"Updating {proj.name} ({proj.inv_url})")
+        index([proj.inv_url])
+
+
+def unique(seq):
+    """Filters a sequence, producing each item just once.
+    """
+    seen = set()
+    for item in seq:
+        if item not in seen:
+            seen.add(item)
+            yield item
+
+
+@app.cli.command('guess-pypi')
+@click.argument("pkg")
+def guess_pypi(pkg):
+    """
+    Given a PyPI package name, guess its object inventory
+    """
+    with Guesser() as guesser:
+        # Using iterator chaining here for the unique() states.
+        # Basically, make sure unique(guesser.perform_guessing()) applies to
+        # all roots.
+        for url in unique(guesser.perform_guessing(
+            unique(guesser.guess_for_pypi(pkg))
+        )):
+            print(url)
+
+
+@app.cli.command('guess-rtd')
+@click.argument("slug")
+def guess_rtd(slug):
+    """
+    Given a Read The Docs slug, guess its object inventory
+    """
+    with Guesser() as guesser:
+        for url in unique(guesser.perform_guessing([f"https://{slug}.readthedocs.io/"])):
+            print(url)
