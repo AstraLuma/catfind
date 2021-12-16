@@ -8,6 +8,8 @@ services:
     environment:
       - FLASK_ENV=development
       - DATABASE_URL=postgres://postgres:secret@db/db
+    depends_on:
+      - db
 
 
   db:
