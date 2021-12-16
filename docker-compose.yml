@@ -4,15 +4,19 @@ services:
   web:
     build: .
     ports:
-      - "5000:5000"
+      - "8000:8000"
     environment:
       - FLASK_ENV=development
+      - DATABASE_URL=postgres://postgres:secret@db/db
 
 
   db:
-    image: cockroachdb/cockroach:v21.2.2
+    image: postgres
     volumes:
-      - cockroach-data:/cockroach/cockroach-data
+      - pg-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=secret
+      - POSTGRES_DB=db
 
 volumes:
-  cockroach-data:
+  pg-data:

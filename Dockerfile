@@ -35,4 +35,4 @@ ENV FLASK_APP=catfind
 # ENV GUNICORN_BIND=0.0.0.0:8080
 # ENV GUNICORN_LOG_LEVEL=debug
 
-CMD ["gunicorn"]
+CMD ["gunicorn", "catfind:app"]
