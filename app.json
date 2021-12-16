@@ -1,0 +1,34 @@
+{
+    "name": "catfind",
+    "description": "Finds the docs for a name",
+    "keywords": [
+      "python",
+      "sphinx"
+    ],
+    "website": "https://sphinx.rip/",
+    "repository": "https://github.com/AstraLuma/catfind",
+    "success_url": "/",
+    "scripts": {
+    },
+    "env": {
+        "FLASK_APP": "catfind",
+        "FLASK_ENV": "production"
+    },
+    "formation": {
+      "web": {
+        "quantity": 1,
+        "size": "hobby"
+      }
+    },
+    "addons": [
+      {
+        "plan": "heroku-postgresql",
+        "as": "database"
+      }
+    ],
+    "buildpacks": [
+      {
+        "url": "heroku/python"
+      }
+    ]
+}
