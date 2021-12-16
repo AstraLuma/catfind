@@ -1,7 +1,9 @@
+# Note: Python version needs to be kept in sync with pyproject.toml
+
 # Check that the requirements.txt file is up-to-date
 reqs_task:
   container:
-    image: python:3
+    image: python:3.9
   install_script:
     - pip install poetry
   test_script:
@@ -13,7 +15,7 @@ reqs_task:
 
 lint_task:
   container:
-    image: python:3
+    image: python:3.9
   install_script:
     - pip install poetry
     - poetry install

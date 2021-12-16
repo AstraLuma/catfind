@@ -2,6 +2,7 @@
 #| build: dev
 
 #: The version of python to use. Can't be set willy-nilly.
+# Note: Python version needs to be kept in sync with pyproject.toml
 ARG PYVER=3.9
 
 # Temporary container to handle building python-ldap
