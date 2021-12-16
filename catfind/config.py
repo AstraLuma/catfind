@@ -11,7 +11,7 @@ if 'DATABASE_URL' in os.environ:
         'provider': bits.scheme,
         'user': bits.username,
         'password': bits.password,
-        'host': bits.host,
+        'host': bits.hostname,
         'database': bits.path.lstrip('/'),
     }
 else:
