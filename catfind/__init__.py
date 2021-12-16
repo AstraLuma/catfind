@@ -2,6 +2,7 @@ from datetime import datetime, timezone, timedelta
 import importlib.resources
 import json
 import logging
+import os
 import random
 
 import click
@@ -144,11 +145,15 @@ LIST_TYPES = {
 
 @app.before_first_request
 def load_initial_indexes():
+    # For the benefit of calling the CLI
+    os.environ.setdefault('FLASK_APP', __name__)
+
     for url in app.config['INITIAL_INVENTORIES']:
         with orm.db_session():
             proj = Project.get(inv_url=url)
 
         if proj is None:
+            logger.info("Adding initial inventory %r", url)
             index([url])
 
 
