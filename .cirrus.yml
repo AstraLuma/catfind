@@ -16,6 +16,6 @@ lint_task:
     image: python:3
   install_script:
     - pip install poetry
-    - poetry install --dev
+    - poetry install
   test_script:
     - flake8
