@@ -5,7 +5,8 @@ description = "Sphinx indexing & search service"
 authors = ["Jamie Bliss <jamie@ivyleav.es>"]
 
 [tool.poetry.dependencies]
-# Python version is duplicated to .cirrus.yaml, Dockerfile
+# Python version is duplicated to .cirrus.yaml, Dockerfile, .python-version
+# Currently locked to 3.9 by pony
 python = "^3.9"
 Flask = "^2.0.2"
 pony = "^0.7.14"
