@@ -1,0 +1,22 @@
+<!doctype html>
+<html>
+    <head>
+        <title>catfind: sphinx indexer</title>
+    </head>
+    <body>
+        <h1>catfind: sphinx indexer</h1>
+        <p>This will help you find your python docs!</p>
+
+        <p>Try this:
+        <pre>{{request.host_url}}py/package.Class.method</pre>
+        </p>
+
+        <ul>
+            <li><a href="{{request.host_url}}py/collections.Counter.most_common"><tt>{{request.host_url}}py/collections.Counter.most_common</tt></a></li>
+            <li><a href="{{request.host_url}}py/importlib.metadata.entry_points"><tt>{{request.host_url}}py/importlib.metadata.entry_points</tt></a></li>
+            <li><a href="{{request.host_url}}py/webbrowser"><tt>{{request.host_url}}py/webbrowser</tt></a></li>
+        </ul>
+
+        <p>Will also give you plain text or JSON if you ask for it.</p>
+    </body>
+</html>

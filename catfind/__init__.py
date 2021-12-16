@@ -71,6 +71,10 @@ db.generate_mapping(create_tables=True)
 Pony(app)
 
 
+@app.route("/")
+def homepage():
+    return render_template(__name__, 'homepage.html')
+
 @app.route("/!projects")
 def projects():
     return {'projects': [
@@ -98,6 +102,9 @@ def lookup(domain, name):
         return redirect(e.url, code=303)
     else:
         accepted = request.accept_mimetypes.best_match(LIST_TYPES.keys())
+        if accepted is None:
+            # Probably a previewer or something
+            accepted = 'text/html'
         resp = LIST_TYPES[accepted](entries)
         resp.headers['Content-Type'] = accepted
         return resp
