@@ -2,9 +2,7 @@ from datetime import datetime, timezone, timedelta
 import importlib.resources
 import json
 import logging
-import os
 import random
-from re import U
 
 import click
 from flask import Flask, redirect, make_response, request, render_template_string
@@ -76,6 +74,7 @@ Pony(app)
 @app.route("/")
 def homepage():
     return render_template(__name__, 'homepage.html')
+
 
 @app.route("/!projects")
 def projects():
@@ -224,7 +223,9 @@ def auto_index(number):
             else:
                 return (now - val.replace(tzinfo=timezone.utc)).total_seconds()
 
-        projs = select(p for p in Project if not p.last_indexed or p.last_indexed <= index_before)[:]
+        projs = select(
+            p for p in Project if not p.last_indexed or p.last_indexed <= index_before
+        )[:]
         weights = [time_since(p.last_indexed) for p in projs]
 
         if not projs:

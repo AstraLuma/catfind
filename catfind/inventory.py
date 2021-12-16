@@ -13,7 +13,7 @@ import io
 import logging
 import os
 import re
-from typing import IO, TYPE_CHECKING, Callable, Iterator, Tuple, Dict
+from typing import IO, Callable, Iterator
 import zlib
 
 import httpx

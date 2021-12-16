@@ -2,9 +2,20 @@
 reqs_task:
   container:
     image: python:3
-  test_script:
+  install_script:
     - pip install poetry
+  test_script:
     - make requirements.txt
     # Magic incantation to check for a dirty git
     # https://stackoverflow.com/questions/2657935/checking-for-a-dirty-index-or-untracked-files-with-git
     - git diff-files --quiet
+
+
+lint_task:
+  container:
+    image: python:3
+  install_script:
+    - pip install poetry
+    - poetry install --dev
+  test_script:
+    - flake8
