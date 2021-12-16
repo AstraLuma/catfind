@@ -16,7 +16,7 @@ from .inventory import Inventory
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
-app.config.from_object('catfind.default_config')
+app.config.from_object('catfind.config')
 
 db = orm.Database()
 
