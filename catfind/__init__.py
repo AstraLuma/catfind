@@ -296,7 +296,11 @@ def guess_pypi(pkg, add):
             if add:
                 with orm.db_session():
                     if not Project.get(inv_url=str(url)):
-                        Project(inv_url=str(url), pypi_pkg_name=pkg, rtd_slug=guesser.rtd_slug(url))
+                        Project(
+                            inv_url=str(url),
+                            pypi_pkg_name=pkg,
+                            rtd_slug=guesser.rtd_slug(url),
+                        )
 
 
 @app.cli.command('guess-rtd')
