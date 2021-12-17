@@ -41,7 +41,9 @@ class RtdClient:
 
     def canonical_url_v2(self, slug):
         resp = self.client.get("https://readthedocs.org/api/v2/project/", params={'slug': slug})
-        resp.raise_for_status()
+        if not resp.is_success:
+            # This can happen if the project declared a URL that doesn't actually exist.
+            return
         data = resp.json()
         if data['count']:
             # Just grab the first result
@@ -57,7 +59,9 @@ class RtdClient:
             params={'expand': 'active_versions'},
             headers={'Authorization': f'Token {self.token}'},
         )
-        resp.raise_for_status()
+        if not resp.is_success:
+            # This can happen if the project declared a URL that doesn't actually exist.
+            return
         data = resp.json()
         for version in data['active_versions']:
             if version['slug'] == data['default_version']:
