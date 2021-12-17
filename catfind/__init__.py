@@ -84,7 +84,8 @@ if app.config['DEBUG']:
                 'url': proj.inv_url,
                 'name': proj.name,
                 'version': proj.version,
-                'last_indexed': None if proj.last_indexed is None else proj.last_indexed.isoformat(),
+                'last_indexed':
+                    None if proj.last_indexed is None else proj.last_indexed.isoformat(),
             }
             for proj in select(i for i in Project)
         ]}
