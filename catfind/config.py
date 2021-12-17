@@ -23,7 +23,11 @@ else:
 
 # Inventories to load at start
 INITIAL_INVENTORIES = [
+    # CPython, pretty important and undiscoverable
     'https://docs.python.org/3/objects.inv',
+    # Discovery turns these up a bunch, so let's just add them now
+    'https://pip.pypa.io/en/stable/objects.inv',
+    'https://tox.wiki/en/latest/objects.inv',
 ]
 
 # User Agent to use for making HTTP requests
