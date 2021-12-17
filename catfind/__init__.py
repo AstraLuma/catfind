@@ -76,17 +76,18 @@ def homepage():
     return render_template(__name__, 'homepage.html')
 
 
-@app.route("/!projects")
-def projects():
-    return {'projects': [
-        {
-            'url': proj.inv_url,
-            'name': proj.name,
-            'version': proj.version,
-            'last_indexed': None if proj.last_indexed is None else proj.last_indexed.isoformat(),
-        }
-        for proj in select(i for i in Project)
-    ]}
+if app.config['DEBUG']:
+    @app.route("/!projects")
+    def projects():
+        return {'projects': [
+            {
+                'url': proj.inv_url,
+                'name': proj.name,
+                'version': proj.version,
+                'last_indexed': None if proj.last_indexed is None else proj.last_indexed.isoformat(),
+            }
+            for proj in select(i for i in Project)
+        ]}
 
 
 @app.route("/<domain>/<path:name>")
