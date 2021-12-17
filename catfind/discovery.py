@@ -93,7 +93,7 @@ class Guesser(contextlib.ExitStack):
 
         Currently, just a string operation.
         """
-        bits = urlparse(url)
+        bits = urlparse(str(url))
         if bits.hostname.endswith('.readthedocs.io') or bits.hostname.endswith('.rtfd.io'):
             slug, _, _ = bits.hostname.partition('.')
             return slug
