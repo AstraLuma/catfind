@@ -63,6 +63,28 @@ class RtdClient:
             if version['slug'] == data['default_version']:
                 return version['urls']['documentation']
 
+    def iter_projects(self):
+        """Generates all of the projects.
+
+        If by "all" we mean "all the user is a member of".
+
+        Requires a token.
+        """
+        assert self.token
+        # Yeah, we could also implement a v2 version, but using a token feels
+        # nicer to the RTD version
+        cur_url = "https://readthedocs.org/api/v3/projects/"
+        while cur_url:
+            resp = self.client.get(
+                cur_url,
+                headers={'Authorization': f'Token {self.token}'},
+            )
+            resp.raise_for_status()
+            data = resp.json()
+            yield from data['results']
+
+            cur_url = data['next']
+
 
 class Guesser(contextlib.ExitStack):
     """Utility to handle all of the blindly poking at things to see if we can
@@ -78,11 +100,16 @@ class Guesser(contextlib.ExitStack):
     def resolve(self, url) -> Optional[httpx.URL]:
         """Resolve a URL--follow redirects, check for existance, etc.
         """
+        # Some funky things I've seen:
+        # * UNKNOWN
+
+        # Pretty handy bit of debugging, keep this arround
+        # print(f"resolve {url=}")
         try:
             resp = self.client.head(url, follow_redirects=True)
-        except httpx.ReadTimeout:
+        except httpx.HTTPError:
             pass
-        except httpx.ConnectError:
+        except httpx.InvalidURL:
             pass
         else:
             if resp.is_success:
@@ -94,6 +121,8 @@ class Guesser(contextlib.ExitStack):
         Currently, just a string operation.
         """
         bits = urlparse(str(url))
+        if not bits.hostname:
+            return
         if bits.hostname.endswith('.readthedocs.io') or bits.hostname.endswith('.rtfd.io'):
             slug, _, _ = bits.hostname.partition('.')
             return slug
@@ -103,15 +132,17 @@ class Guesser(contextlib.ExitStack):
         """Given a URL, guess at a few possible locations for a sphinx
         inventory.
         """
-        if not url:
+        if not url or ':' not in str(url):
             return
 
         # Does it look like a Read The Docs site?
         if slug := self.rtd_slug(url):
             # Yes, so let's just ask RTD instead of probing blindly
             rtd = RtdClient(client=self.client)
-            yield httpx.URL(rtd.canonical_url(slug)).join('objects.inv')
-            return
+            rtd_url = rtd.canonical_url(slug)
+            if rtd_url:
+                yield httpx.URL(rtd_url).join('objects.inv')
+                return
 
         # TODO: Can we do the same thing for sites with custom domains?
 
@@ -132,6 +163,7 @@ class Guesser(contextlib.ExitStack):
     def check_for_inventory(self, url):
         """Checks if the given URL is actually a sphinx inventory.
         """
+        # print(f"check_for_inventory {url=}")
         with self.client.stream('GET', url, follow_redirects=True) as resp:
             if not resp.is_success:
                 return False
@@ -156,7 +188,9 @@ class Guesser(contextlib.ExitStack):
         prominent/declared than later ones.
         """
         resp = self.client.get(f"https://pypi.org/pypi/{pkg}/json", follow_redirects=True)
-        resp.raise_for_status()
+        if not resp.is_success:
+            # Not actually a package:
+            return
         data = resp.json()
 
         if data['info']['docs_url'] and self.resolve(data['info']['docs_url']):

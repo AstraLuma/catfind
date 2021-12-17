@@ -13,6 +13,7 @@ from pony.orm import select
 
 from .discovery import Guesser
 from .inventory import Inventory
+from .pypi_simple import PyPISimple
 
 logger = logging.getLogger(__name__)
 
@@ -66,7 +67,7 @@ class Project(db.Entity):
     first_seen = orm.Required(datetime, sql_default='CURRENT_TIMESTAMP')
 
     # Some source metadata, to help with re-discovering URLs later
-    pypi_pkg_name = orm.Optional(str)
+    pypi_pkg_name = orm.Optional(str)  # This is basically sins, see guess_pypi()
     rtd_slug = orm.Optional(str)
 
     # TODO: Indexing metadata to clean up dead projects
@@ -304,6 +305,10 @@ def guess_pypi(pkg, add, all):
                     if not Project.get(inv_url=str(url)):
                         Project(
                             inv_url=str(url),
+                            # Too noisy, can't positively identify that a given
+                            # link is for this package specifically.
+                            # Does act as an audit log, though, so we'll keep it
+                            # for now.
                             pypi_pkg_name=pkg,
                             rtd_slug=guesser.rtd_slug(url) or '',
                         )
@@ -326,3 +331,25 @@ def guess_rtd(slug, add):
                 with orm.db_session():
                     if not Project.get(inv_url=str(url)):
                         Project(inv_url=str(url), rtd_slug=slug)
+
+
+@app.cli.command('crawl-pypi')
+@click.pass_context
+def crawl_pypi(ctx):
+    """
+    Attempt to index all of PyPI
+    """
+    click.echo("Loading package list...")
+    with PyPISimple() as pypi:
+        names = list(pypi.stream_project_names())
+
+    # Shuffle the names so that repeated failures don't keep retreading over the
+    # same packages.
+    # Unfortunately means we have to preload the entire package list.
+    random.shuffle(names)
+
+    # Not too worried about rate limiting against PyPI, since this process is
+    #   S   L   O   W
+    for name in names:
+        click.echo(f"Guessing: {name}")
+        ctx.invoke(guess_pypi, pkg=name, add=True)
