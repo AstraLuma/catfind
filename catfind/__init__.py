@@ -1,5 +1,6 @@
 from datetime import datetime, timezone, timedelta
 import importlib.resources
+import itertools
 import json
 import logging
 import random
@@ -281,7 +282,8 @@ def unique(seq):
 @app.cli.command('guess-pypi')
 @click.argument("pkg")
 @click.option('--add/--no-add', default=False, help="Automatically add to the app")
-def guess_pypi(pkg, add):
+@click.option('--all/--no-all', default=False, help="Keep checking after the first is found")
+def guess_pypi(pkg, add, all):
     """
     Given a PyPI package name, guess its object inventory
     """
@@ -289,9 +291,13 @@ def guess_pypi(pkg, add):
         # Using iterator chaining here for the unique() states.
         # Basically, make sure unique(guesser.perform_guessing()) applies to
         # all roots.
-        for url in unique(guesser.perform_guessing(
-            unique(guesser.guess_for_pypi(pkg))
-        )):
+        for url in unique(guesser.perform_guessing(unique(itertools.chain(
+            # First, just _try_ the name as an RTD site. This is so common it's
+            # got at least a 50/50 of working.
+            [f"https://{pkg}.readthedocs.io/"],
+            # Ok, dig deeper.
+            guesser.guess_for_pypi(pkg),
+        )))):
             print(url)
             if add:
                 with orm.db_session():
@@ -301,6 +307,9 @@ def guess_pypi(pkg, add):
                             pypi_pkg_name=pkg,
                             rtd_slug=guesser.rtd_slug(url) or '',
                         )
+            # Since this in priority order, skip others
+            if not all:
+                break
 
 
 @app.cli.command('guess-rtd')
