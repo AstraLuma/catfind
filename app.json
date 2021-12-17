@@ -24,6 +24,9 @@
       {
         "plan": "heroku-postgresql",
         "as": "database"
+      },
+      {
+        "plan": "scheduler:standard"
       }
     ],
     "buildpacks": [

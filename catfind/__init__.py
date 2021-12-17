@@ -251,7 +251,8 @@ def unique(seq):
 
 @app.cli.command('guess-pypi')
 @click.argument("pkg")
-def guess_pypi(pkg):
+@click.option('--add/--no-add', default=False, help="Automatically add to the app")
+def guess_pypi(pkg, add):
     """
     Given a PyPI package name, guess its object inventory
     """
@@ -263,14 +264,23 @@ def guess_pypi(pkg):
             unique(guesser.guess_for_pypi(pkg))
         )):
             print(url)
+            if add:
+                with orm.db_session():
+                    if not Project.get(inv_url=str(url)):
+                        Project(inv_url=str(url))
 
 
 @app.cli.command('guess-rtd')
 @click.argument("slug")
-def guess_rtd(slug):
+@click.option('--add/--no-add', default=False, help="Automatically add to the app")
+def guess_rtd(slug, add):
     """
     Given a Read The Docs slug, guess its object inventory
     """
     with Guesser() as guesser:
         for url in unique(guesser.perform_guessing([f"https://{slug}.readthedocs.io/"])):
             print(url)
+            if add:
+                with orm.db_session():
+                    if not Project.get(inv_url=str(url)):
+                        Project(inv_url=str(url))
