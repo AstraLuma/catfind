@@ -206,9 +206,24 @@ def index(url):
     # TODO: Clean up old entries
 
 
+def dyna_shuffle(seq: list, weights: list, k: int):
+    """Kinda like random.shuffle(seq)[:k], but with weights.
+
+    Modifies both seq and weight in-place.
+    """
+    for _ in range(k):
+        if not seq:
+            break
+        (i, value), = random.choices(list(enumerate(seq)), weights)
+        yield value
+        del seq[i]
+        del weights[i]
+
+
 @app.cli.command('auto-index')
 @click.option('-n', '--number', type=int, default=1, help="Number of projects to process")
-def auto_index(number):
+@click.pass_context
+def auto_index(ctx, number):
     """
     Automatically select & index one project.
 
@@ -218,26 +233,27 @@ def auto_index(number):
         now = datetime.now(timezone.utc)
         index_before = now - timedelta(days=1)
 
-        def time_since(val):
-            if val is None:
-                return 1e6  # idk, a lot i guess
-            else:
-                return (now - val.replace(tzinfo=timezone.utc)).total_seconds()
-
-        projs = select(
+        projs = list(select(
             p for p in Project if not p.last_indexed or p.last_indexed <= index_before
-        )[:]
+        ))
+
+    if not projs:
+        # No projects
+        return
+
+    def time_since(val):
+        if val is None:
+            return 1e6  # idk, a lot i guess
+        else:
+            return (now - val.replace(tzinfo=timezone.utc)).total_seconds()
+
+    if len(projs) > number:
         weights = [time_since(p.last_indexed) for p in projs]
-
-        if not projs:
-            # No projects
-            return
-
-        projs = random.choices(projs, weights=weights, k=number)
+        projs = dyna_shuffle(projs, weights, number)
 
     for proj in projs:
         print(f"Updating {proj.name} ({proj.inv_url})")
-        index([proj.inv_url])
+        ctx.invoke(index, url=proj.inv_url)
 
 
 def unique(seq):
