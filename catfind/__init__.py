@@ -299,7 +299,7 @@ def guess_pypi(pkg, add):
                         Project(
                             inv_url=str(url),
                             pypi_pkg_name=pkg,
-                            rtd_slug=guesser.rtd_slug(url),
+                            rtd_slug=guesser.rtd_slug(url) or '',
                         )
 
 
