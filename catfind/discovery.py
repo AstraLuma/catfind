@@ -88,6 +88,16 @@ class Guesser(contextlib.ExitStack):
             if resp.is_success:
                 return resp.url
 
+    def rtd_slug(self, url: str) -> Optional[str]:
+        """Given a URL, get its RTD slug
+
+        Currently, just a string operation.
+        """
+        bits = urlparse(url)
+        if bits.hostname.endswith('.readthedocs.io') or bits.hostname.endswith('.rtfd.io'):
+            slug, _, _ = bits.hostname.partition('.')
+            return slug
+
     @functools.cache
     def guess_url(self, url):
         """Given a URL, guess at a few possible locations for a sphinx
@@ -97,11 +107,9 @@ class Guesser(contextlib.ExitStack):
             return
 
         # Does it look like a Read The Docs site?
-        bits = urlparse(url)
-        if bits.hostname.endswith('.readthedocs.io') or bits.hostname.endswith('.rtfd.io'):
+        if slug := self.rtd_slug(url):
             # Yes, so let's just ask RTD instead of probing blindly
             rtd = RtdClient(client=self.client)
-            slug, _, _ = bits.hostname.partition('.')
             yield httpx.URL(rtd.canonical_url(slug)).join('objects.inv')
             return
 

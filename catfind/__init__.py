@@ -26,8 +26,10 @@ def render_template(pkg, resource, **context):
     return render_template_string(txt, **context)
 
 
-# Current schema management: append only, never change columns.
-# (TODO: Better schema management)
+# Current schema management: lol
+
+# Under PostgreSQL (Jamie's SQL of choice), there is no difference between
+# VARCHAR and TEXT, so don't worry about length limits
 
 class Entry(db.Entity):
     id = orm.PrimaryKey(int, auto=True)
@@ -39,8 +41,7 @@ class Entry(db.Entity):
     project = orm.Required('Project')
     last_indexed = orm.Required(datetime)
     orm.composite_index(domain, name)  # Primary lookup
-
-    # TODO: first_seen
+    first_seen = orm.Required(datetime, sql_default='CURRENT_TIMESTAMP')
 
     @property
     def kind(self):
@@ -61,9 +62,13 @@ class Project(db.Entity):
     last_indexed = orm.Optional(datetime)
     version = orm.Optional(str)
     entries = orm.Set(Entry)
+    first_seen = orm.Required(datetime, sql_default='CURRENT_TIMESTAMP')
 
-    # TODO: pypi_name
-    # TODO: rtd_name
+    # Some source metadata, to help with re-discovering URLs later
+    pypi_pkg_name = orm.Optional(str)
+    rtd_slug = orm.Optional(str)
+
+    # TODO: Indexing metadata to clean up dead projects
 
 
 db.bind(**app.config['PONY'])
@@ -174,7 +179,6 @@ def index(url):
     """
     now = datetime.now(timezone.utc)
     logger.info("Downloading %s", url)
-    # FIXME: break this up into several smaller transactions
     inv = Inventory.load_uri(url)
 
     proj = Project.get(inv_url=inv.uri)
@@ -190,6 +194,8 @@ def index(url):
     proj.name = inv.projname
     proj.version = inv.version
 
+    orm.commit()
+
     for item in inv:
         domain, role = item.domain_role
         ent = Entry.get(project=proj, domain=domain, role=role, name=item.name)
@@ -201,10 +207,15 @@ def index(url):
             ent.url = item.location
             ent.last_indexed = now
             ent.dispname = item.dispname
+        orm.commit()
 
     proj.last_indexed = now
+    orm.commit()
 
-    # TODO: Clean up old entries
+    # At this point, any Entry with an old last_updated was not seen this pass,
+    # so clean it up.
+    orm.delete(e for e in proj.entries if e.last_indexed < now)
+    orm.commit()
 
 
 def dyna_shuffle(seq: list, weights: list, k: int):
@@ -285,7 +296,7 @@ def guess_pypi(pkg, add):
             if add:
                 with orm.db_session():
                     if not Project.get(inv_url=str(url)):
-                        Project(inv_url=str(url))
+                        Project(inv_url=str(url), pypi_pkg_name=pkg, rtd_slug=guesser.rtd_slug(url))
 
 
 @app.cli.command('guess-rtd')
@@ -301,4 +312,4 @@ def guess_rtd(slug, add):
             if add:
                 with orm.db_session():
                     if not Project.get(inv_url=str(url)):
-                        Project(inv_url=str(url))
+                        Project(inv_url=str(url), rtd_slug=slug)
