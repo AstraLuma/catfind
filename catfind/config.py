@@ -31,7 +31,7 @@ INITIAL_INVENTORIES = [
 ]
 
 # User Agent to use for making HTTP requests
-USER_AGENT = "catfind <https://sphinx.rip/>"
+USER_AGENT = "catfind <https://sphinx.rip/> (@AstraLuma)"
 
 
 # Token for use with Read The Docs
