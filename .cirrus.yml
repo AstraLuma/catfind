@@ -10,7 +10,7 @@ reqs_task:
     - make requirements.txt
     # Magic incantation to check for a dirty git
     # https://stackoverflow.com/questions/2657935/checking-for-a-dirty-index-or-untracked-files-with-git
-    - git diff-files --quiet
+    - git diff-files
 
 
 lint_task:
