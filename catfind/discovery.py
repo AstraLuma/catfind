@@ -151,18 +151,24 @@ class Guesser(contextlib.ExitStack):
         # TODO: Can we do the same thing for sites with custom domains?
 
         # Join then check for redirects
-        url1 = self.resolve(httpx.URL(url).join('objects.inv'))
+        try:
+            url = self.resolve(httpx.URL(url).join('objects.inv'))
+        except Exception:
+            pass
+        else:
+            if url:
+                yield url
 
         # Check for redirects and then join
-        url2 = self.resolve(url)
-        if url2:
-            url2 = self.resolve(url2.join('objects.inv'))
-
-        if url1:
-            yield url1
-
-        if url2:
-            yield url2
+        try:
+            url = self.resolve(url)
+            if url:
+                url = self.resolve(url.join('objects.inv'))
+        except Exception:
+            pass
+        else:
+            if url:
+                yield url
 
     def check_for_inventory(self, url):
         """Checks if the given URL is actually a sphinx inventory.
