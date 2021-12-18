@@ -174,11 +174,17 @@ class Guesser(contextlib.ExitStack):
         """Checks if the given URL is actually a sphinx inventory.
         """
         # print(f"check_for_inventory {url=}")
-        with self.client.stream('GET', url, follow_redirects=True) as resp:
-            if not resp.is_success:
-                return False
-            chunk = next(resp.iter_bytes())
-            return chunk.startswith(b'# Sphinx')
+        try:
+            with self.client.stream('GET', url, follow_redirects=True) as resp:
+                if not resp.is_success:
+                    return False
+                chunk = next(resp.iter_bytes())
+                return chunk.startswith(b'# Sphinx')
+        # The rest of the system should filter out errors, but occassionally shit happens
+        except httpx.HTTPError:
+            return False
+        except httpx.InvalidURL:
+            return False
 
     def perform_guessing(self, roots):
         """Given a collection of discovered URLs, process them into a set of
