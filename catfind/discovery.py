@@ -3,7 +3,6 @@ Tools for finding, resolving, and normalizing sphinx sites.
 """
 from __future__ import annotations
 import contextlib
-import functools
 import re
 from typing import Optional
 from urllib.parse import urlparse
@@ -90,6 +89,10 @@ class RtdClient:
             cur_url = data['next']
 
 
+# FIXME: cap size
+_CACHED_RESOLUTIONS = {}
+
+
 class Guesser(contextlib.ExitStack):
     """Utility to handle all of the blindly poking at things to see if we can
     find a sphinx inventory.
@@ -99,8 +102,6 @@ class Guesser(contextlib.ExitStack):
         self.client = self.enter_context(http.client())
         return self
 
-    # Caching for the duration of this CLI call.
-    @functools.cache
     def resolve(self, url) -> Optional[httpx.URL]:
         """Resolve a URL--follow redirects, check for existance, etc.
         """
@@ -109,11 +110,19 @@ class Guesser(contextlib.ExitStack):
 
         # Pretty handy bit of debugging, keep this arround
         # print(f"resolve {url=}")
+
+        if url not in _CACHED_RESOLUTIONS:
+            _CACHED_RESOLUTIONS[url] = self._real_resolve(url)
+        return _CACHED_RESOLUTIONS[url]
+
+    def _real_resolve(self, url):
         try:
             resp = self.client.head(url, follow_redirects=True)
         except httpx.HTTPError:
             pass
         except httpx.InvalidURL:
+            pass
+        except ValueError:
             pass
         else:
             if resp.is_success:
@@ -131,7 +140,6 @@ class Guesser(contextlib.ExitStack):
             slug, _, _ = bits.hostname.partition('.')
             return slug
 
-    @functools.cache
     def guess_url(self, url):
         """Given a URL, guess at a few possible locations for a sphinx
         inventory.
