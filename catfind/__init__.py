@@ -284,7 +284,8 @@ def unique(seq):
 @click.argument("pkg")
 @click.option('--add/--no-add', default=False, help="Automatically add to the app")
 @click.option('--all/--no-all', default=False, help="Keep checking after the first is found")
-def guess_pypi(pkg, add, all):
+@click.option('--quiet/--no-quiet', default=False, help="Be quiet")
+def guess_pypi(pkg, add, all, quiet):
     """
     Given a PyPI package name, guess its object inventory
     """
@@ -299,7 +300,8 @@ def guess_pypi(pkg, add, all):
             # Ok, dig deeper.
             guesser.guess_for_pypi(pkg),
         )))):
-            print(url)
+            if not quiet:
+                click.echo(url)
             if add:
                 with orm.db_session():
                     if not Project.get(inv_url=str(url)):
@@ -320,13 +322,15 @@ def guess_pypi(pkg, add, all):
 @app.cli.command('guess-rtd')
 @click.argument("slug")
 @click.option('--add/--no-add', default=False, help="Automatically add to the app")
-def guess_rtd(slug, add):
+@click.option('--quiet/--no-quiet', default=False, help="Be quiet")
+def guess_rtd(slug, add, quiet):
     """
     Given a Read The Docs slug, guess its object inventory
     """
     with Guesser() as guesser:
         for url in unique(guesser.perform_guessing([f"https://{slug}.readthedocs.io/"])):
-            print(url)
+            if not quiet:
+                click.echo(url)
             if add:
                 with orm.db_session():
                     if not Project.get(inv_url=str(url)):
@@ -350,6 +354,7 @@ def crawl_pypi(ctx):
 
     # Not too worried about rate limiting against PyPI, since this process is
     #   S   L   O   W
-    for name in names:
-        click.echo(f"Guessing: {name}")
-        ctx.invoke(guess_pypi, pkg=name, add=True)
+    with click.progressbar(names, item_show_func=lambda a: a) as bar:
+        for name in bar:
+            # TODO: Is there a way to do this that's nice to progress bar?
+            ctx.invoke(guess_pypi, pkg=name, add=True, quiet=True)
