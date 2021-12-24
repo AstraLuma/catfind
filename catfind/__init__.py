@@ -204,10 +204,10 @@ def index(url):
         if ent is None:
             ent = Entry(
                 project=proj, domain=domain, role=role, name=item.name,
-                url=item.location, dispname=item.dispname, last_indexed=now)
+                url=item.location, dispname=item.dispname, last_indexed=now.replace(tzinfo=None))
         else:
             ent.url = item.location
-            ent.last_indexed = now
+            ent.last_indexed = now.replace(tzinfo=None)
             ent.dispname = item.dispname
         orm.commit()
 
