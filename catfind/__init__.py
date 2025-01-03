@@ -101,9 +101,10 @@ if app.config['DEBUG']:
 @app.route("/<domain>/<path:name>")
 def lookup(domain, name):
     if domain == '*':
-        entries = select(e for e in Entry if e.name == name)[:]
+        entries = select(e for e in Entry if e.name.lower() == name.lower())[:]
     else:
-        entries = select(e for e in Entry if e.name == name and e.domain == domain)[:]
+        entries = select(e for e in Entry if e.name.lower() == name.lower()
+                         and e.domain.lower() == domain.lower())[:]
 
     if len(entries) == 0:
         return "Nothing found", 404
